@@ -1,0 +1,71 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<!--
+    http://nebezb.com/floppybird/
+   Copyright 2014 Nebez Briefkani
+   floppybird - index.html
+-->
+
+   <head>
+      <title>Calculus Flappy Bird</title>
+
+      <!-- Open Graph tags -->
+      <meta property="og:title" content="Floppy Bird" />
+      <meta property="og:description" content="play floppy bird. a remake of popular game flappy bird using just html/css/js" />
+      <meta property="og:type" content="website" />
+      <meta property="og:image" content="http://nebez.github.io/floppybird/assets/thumb.png" />
+      <meta property="og:url" content="http://nebez.github.io/floppybird/" />
+      <meta property="og:site_name" content="Calculus Floppy Bird" />
+      
+      <!-- Style sheets -->
+      <link href="css/reset.css" rel="stylesheet">
+      <link href="css/main.css" rel="stylesheet">
+   </head>
+   <body>
+      <div id="gamecontainer">
+         <div id="gamescreen">
+            <div id="sky" class="animated">
+               <div id="flyarea">
+                  <input type='range' class='FlappySlider' id='slider'/>
+                  <div id="ceiling" class="animated"></div>
+                  <!-- This is the flying and pipe area container -->
+                  <div id="player" class="bird animated"></div>
+                  
+                  <div id="bigscore"></div>
+                  
+                  <div id="splash">
+                      <button onclick='startGame(0)' class='button gameMode'><img src="assets/Function.png" alt='Function'/></button>
+                      <button onclick='startGame(1)' class='button gameMode'><img src="assets/Derivative.png" alt='Derivative'/></button>
+                      <button onclick='startGame(2)' class='button gameMode'><img src="assets/Integral.png" alt='Integral'/></button>
+                  </div>
+                  
+                  <div id="scoreboard">
+                     <div id="medal"></div>
+                     <div id="currentscore"></div>
+                     <div id="highscore"></div>
+                     <div id="replay"><img src="assets/replay.png" alt="replay"></div>
+                     <button class='button history' onclick='History.viewGraph()'><img src="assets/view.png" alt='View Graph'/></button>
+                     <button class='button history' onclick='History.save()'><img src="assets/save.png" alt='Save Data'/></button>
+                  </div>
+                  
+                  <!-- Pipes go here! -->
+               </div>
+            </div>
+            <div id="land" class="animated"><div id="debug"></div></div>
+         </div>
+      </div>
+      <div id="footer">
+         <a href="http://www.dotgears.com/">original game/concept/art by dong nguyen</a>
+         <a href="">Final Calculus Project by James Finlinson & Kyra Schroeder</a>
+         <a href="http://nebezb.com/">Credit to nebes briefkani for the framework</a>
+      </div>
+      <div class="boundingbox" id="playerbox"></div>
+      <div class="boundingbox" id="pipebox"></div>
+      
+      <script src="js/jquery.min.js"></script>
+      <script src="js/jquery.transit.min.js"></script>
+      <script src="js/buzz.min.js"></script>
+      <script src="js/main.js"></script>
+   </body>
+</html>

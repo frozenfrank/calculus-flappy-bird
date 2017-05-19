@@ -1,0 +1,55 @@
+<html>
+  <head>
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script type="text/javascript">
+      google.charts.load('current', {'packages':['corechart']});
+      google.charts.setOnLoadCallback(drawChart);
+
+      function drawChart() {
+        var data = google.visualization.arrayToDataTable(JSON.parse(localStorage.data));
+        var chart = new google.visualization.LineChart(document.getElementById('curve_chart'));
+        var options = {
+          title: 'Historical Position',
+          curveType: 'function',
+          focusTarget: 'category',
+          theme: 'maximized',
+          legend: { position: 'bottom' }
+        };
+        chart.draw(data, options);
+        // <<==========>>
+        
+        console.log('Initializing Event Listener');
+        window.addEventListener('storage', function(evt) {
+          if(evt.key !== 'data')
+            return;
+            
+          data = google.visualization.arrayToDataTable(JSON.parse(evt.newValue));
+          
+          console.log('Replaced graph with new Data');
+          chart.draw(data, options);
+          
+        }, false);
+        window.addEventListener('storage', function (evt){
+          if(evt.key !== 'newData')
+            return; //not the data we care about
+            
+          // console.log('newData has arrived',evt);
+          
+          if(evt.newValue === 'erase'){
+            data.removeRows(0,data.getNumberOfRows());
+            console.log('Removed Data');
+          }else {
+            
+            data.addRows(JSON.parse(evt.newValue));
+            console.log('Added Data');
+            
+            chart.draw(data, options);
+          }
+        }, false);
+      }
+    </script>
+  </head>
+  <body>
+    <div id="curve_chart" style="width: 100%; height: 100%"></div>
+  </body>
+</html>
