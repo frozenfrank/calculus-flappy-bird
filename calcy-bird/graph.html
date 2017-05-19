@@ -6,7 +6,7 @@
       google.charts.setOnLoadCallback(drawChart);
 
       function drawChart() {
-        var data = google.visualization.arrayToDataTable(JSON.parse(localStorage.data));
+        var data = google.visualization.arrayToDataTable(JSON.parse(localStorage.data || '[]'));
         var chart = new google.visualization.LineChart(document.getElementById('curve_chart'));
         var options = {
           title: 'Historical Position',

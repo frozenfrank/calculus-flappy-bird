@@ -26,7 +26,8 @@ var gameModes = Object.freeze({
    value: 0,
    derivative: 1,
    integral: 2,
-})
+   tap: 3,
+});
 
 var currentstate,currentGameMode;
 
@@ -132,6 +133,7 @@ var Line = function(params,derivatives,integrals){
    return obj;
 };
 
+$('slider').hide();
 var inputHistory = new Line({},1),
     yHistory = new Line({}),
     time;
@@ -203,6 +205,9 @@ function showSplash(){
    $(".pipe").remove();
    pipes = new Array();
    
+   //hide the slider
+   $('#slider').hide();
+   
    //make everything animated again
    $(".animated").css('animation-play-state', 'running');
    $(".animated").css('-webkit-animation-play-state', 'running');
@@ -212,6 +217,8 @@ function showSplash(){
 }
 
 function startGame(mode){
+   if(currentstate !== states.SplashScreen)
+      return; //we are already running 
    currentstate = states.GameScreen;
    
    //fade out the splash
@@ -226,24 +233,30 @@ function startGame(mode){
    History.clear();
    time = 0;
     switch(currentGameMode){
-        case 1:
-            //derivative
+        case gameModes.derivative:
             pipeheight = 80;
-            slider.attr('min',0).attr('max',600).val(300);
+            slider.attr('min',-300).attr('max',300).val(0);
             break;
-        case 2:
-            //integral
+        case gameModes.integral:
             position = flyArea / 2;
             pipeheight = 100;
             slider.attr('min',-100).attr('max',100).val(0);
             break;
-        case 0:
-        default:
+        case gameModes.value:
             //function
             pipeheight = 70;
             slider.attr('min',0).attr('max',flyArea).val(flyArea/2);
+            break;
+         case gameModes.tap:
+            pipeheight = 90;
+            playerJump(); //jump from the start!
+            break;
+         default:
+            console.error('Faulty gameMode');
+            return;
     }
-    
+    if(currentGameMode !== gameModes.tap)
+      slider.show();
    
    //update the big score
    setBigScore();
@@ -259,9 +272,6 @@ function startGame(mode){
    var updaterate = 1000.0 / 60.0 ; //60 times a second
    loopGameloop = setInterval(gameloop, updaterate);
    loopPipeloop = setInterval(updatePipes, 1400);
-   
-   //jump from the start!
-   playerJump();
 }
 
 function updatePlayer(player){
@@ -276,31 +286,36 @@ function gameloop() {
    time++;
    var player = $("#player");
    
-   //update the player speed/position
-//   velocity += gravity;
-//   position += velocity;
    var val = parseInt($('#slider').val());
-   inputHistory.setValue(1,val);
-   velocity = 0;
+   if(currentGameMode !== gameModes.tap)
+      velocity = 0; //we can't resetting the velocity while playing tap
    switch(currentGameMode){
-      case 1:
-         //derivative
-         position += inputHistory.dx.getValue();
+      case gameModes.derivative:
+         inputHistory.setValue(1,-val);
+         position -= inputHistory.dx.getValue();
          position -= Math.abs(position - flyArea/2)/(position - flyArea/2)/2.5;
-         
-         // if(val < -90 || val > 90)
-            // $('#slider').val(0);
          break;
-      case 2:
+      case gameModes.integral:
          //integral
          position += val / 100 * 3;
+         inputHistory.setValue(1,-val);
          break;
-      case 0:
-      default:
-         //function
+      case gameModes.value:
          position = val;
+         inputHistory.setValue(1,flyArea - val);
+         break;
+      case gameModes.tap:
+         // update the player speed/position
+         if(!debugmode)
+            inputHistory.setValue(1,velocity === jump ? 100 : 0); //if we just jumped, log 100, otherwise, log 0
+         else
+            inputHistory.setValue(1,-3 * velocity); //consider just logging the velocity
+            
+         velocity += gravity;
+         position += velocity;
+         break;
    }
-   yHistory.setValue(1,position);
+   yHistory.setValue(1,flyArea - position);
    
    if(time % 60 === 0)
       History.update(); //real time updates
@@ -410,17 +425,19 @@ else
    $(document).on("mousedown", screenClick);
 
 function screenClick(){
-   return; //can't have it starting twice on us
    if(currentstate == states.GameScreen){
       playerJump();
    }
    else if(currentstate == states.SplashScreen)
    {
+      return; //we can't start the game twice
       startGame();
    }
 }
 
 function playerJump(){
+   if(currentGameMode !== gameModes.tap)
+      return; //we only 'jump' while in jumping mode
    velocity = jump;
    //play jump sound
    soundJump.stop();
@@ -483,6 +500,9 @@ function setMedal(){
 function playerDead(){
    //update the rest of the graph
    History.update();
+   
+   //hide the slider
+   $('#slider').hide();
    
    //stop animating everything!
    $(".animated").css('animation-play-state', 'paused');
