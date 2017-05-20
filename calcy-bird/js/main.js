@@ -669,8 +669,7 @@ var History = {
    viewGraph: function(){
       if(!History.save())
          return false;
-         120
-      location.href='graph.html';
+      window.open('graph.html');
    },
    
 };
