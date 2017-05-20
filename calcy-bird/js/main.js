@@ -136,7 +136,58 @@ var Line = function(params,derivatives,integrals){
 $('slider').hide();
 var inputHistory = new Line({},1),
     yHistory = new Line({}),
-    time;
+    time, inputRange,owner = false,i;
+var Settings = {
+   updateRate: {
+      val: (function(){
+         var val = localStorage.updateRate || 45;
+         $('#updateRate').val(val);
+         return val;
+      })(),
+      check: function(){
+         this.val = $('#updateRate').val() || this.val;
+         localStorage.updateRate = this.val + ''; //store it in the localStorage
+         return this.val;
+      }
+   },
+   sendFlaps: {
+      val: (function(){
+         var val = localStorage.sendFlaps ? localStorage.sendFlaps == 'true' : true;
+         $("#altTap").prop('checked',val);
+         return val;
+      })(),
+      check: function(){
+         this.val = $('#altTap').is(':checked');
+         localStorage.sendFlaps = this.val;
+         return this.val;
+      }
+   },
+   graphDomainSize: {
+      val: (function(){
+         var val = localStorage.graphDomainSize || 600;
+         $("#graphDomainSize").val(val);
+         return val;
+      })(),
+      check: function(){
+         this.val = $('#graphDomainSize').val();
+         localStorage.graphDomainSize = this.val;
+         return this.val;
+      }
+   },
+   check: function(){
+      for(var prop in Settings)
+         if(Settings[prop].check !== undefined){
+            Settings[prop].check();
+         }
+      console.log('Updated variables from Settings');
+      return true; //success
+   }
+};
+function heavyWeight(input){
+   if(input === 0)
+      return 0;
+   return Math.abs(input)/input;
+}
 
 
 //sounds
@@ -157,6 +208,11 @@ $(document).ready(function() {
       debugmode = true;
    if(window.location.search == "?easy")
       pipeheight = 200;
+   if(window.location.search == "?owner")
+      owner = true;
+      
+   if(!owner)
+      $("#settings").hide();
    
    //get the highscore
    var savedscore = getCookie("highscore");
@@ -224,6 +280,9 @@ function startGame(mode){
    //fade out the splash
    $("#splash").stop();
    $("#splash").transition({ opacity: 0 }, 500, 'ease');
+      
+   //initially read settings from div
+   Settings.check();
    
     //configure game mode
     currentGameMode = mode;
@@ -232,29 +291,36 @@ function startGame(mode){
    yHistory.clear();
    History.clear();
    time = 0;
+   inputRange = [0,1,0]; //[min,max,start]
     switch(currentGameMode){
+        case gameModes.value: //function
+            pipeheight = owner ? 200 : 70;
+            inputRange = [0,flyArea,flyArea/2];
+            break;
         case gameModes.derivative:
             pipeheight = 80;
-            slider.attr('min',-300).attr('max',300).val(0);
+            position = flyArea / 2;
+            inputRange = [-300,300,0]
             break;
         case gameModes.integral:
             position = flyArea / 2;
             pipeheight = 100;
-            slider.attr('min',-100).attr('max',100).val(0);
-            break;
-        case gameModes.value:
-            //function
-            pipeheight = 70;
-            slider.attr('min',0).attr('max',flyArea).val(flyArea/2);
+            inputRange = [-100,100,0];
             break;
          case gameModes.tap:
             pipeheight = 90;
+            inputRange = [Settings.sendFlaps.val ? 0 : -50,100,0];
             playerJump(); //jump from the start!
             break;
          default:
             console.error('Faulty gameMode');
             return;
     }
+   slider.attr('min',inputRange[0]).attr('max',inputRange[1]).val(inputRange[2]);
+   localStorage.inputRange = JSON.stringify([Math.min(0,inputRange[0] - Math.abs(inputRange[0])/10),Math.max(flyArea,inputRange[1] + Math.abs(inputRange[0])/10)]);
+      // ^^^^ always make sure that the flyArea is in the range of the graph
+         // but expand it to include the range of the input
+         // and add a buffer for asthetics
     if(currentGameMode !== gameModes.tap)
       slider.show();
    
@@ -287,26 +353,39 @@ function gameloop() {
    var player = $("#player");
    
    var val = parseInt($('#slider').val());
-   if(currentGameMode !== gameModes.tap)
-      velocity = 0; //we can't resetting the velocity while playing tap
    switch(currentGameMode){
+      case gameModes.value:
+         inputHistory.setValue(1,flyArea - val);
+         position = val;
+         i = inputHistory.dx.getValue();
+         velocity = 0;
+         /*
+         if(i === 0 && velocity !== 0)
+            velocity -= heavyWeight(velocity);
+         else
+            velocity = -i;
+         console.log("i:",i,"velocity:",velocity);
+         */
+         break;
       case gameModes.derivative:
          inputHistory.setValue(1,-val);
          position -= inputHistory.dx.getValue();
-         position -= Math.abs(position - flyArea/2)/(position - flyArea/2)/2.5;
+         position -= heavyWeight(position - flyArea/2) / 2.5;
+         velocity = 0;
+         /*
+         if(owner)
+            velocity = -inputHistory.dx.getValue();
+         */
          break;
       case gameModes.integral:
          //integral
          position += val / 100 * 3;
+         velocity = val / 20;
          inputHistory.setValue(1,-val);
-         break;
-      case gameModes.value:
-         position = val;
-         inputHistory.setValue(1,flyArea - val);
          break;
       case gameModes.tap:
          // update the player speed/position
-         if(!debugmode)
+         if(Settings.sendFlaps.val)
             inputHistory.setValue(1,velocity === jump ? 100 : 0); //if we just jumped, log 100, otherwise, log 0
          else
             inputHistory.setValue(1,-3 * velocity); //consider just logging the velocity
@@ -317,8 +396,9 @@ function gameloop() {
    }
    yHistory.setValue(1,flyArea - position);
    
-   if(time % 60 === 0)
+   if(time % Settings.updateRate.val === 0){
       History.update(); //real time updates
+   }
     
    //update the player
    updatePlayer(player);
@@ -345,8 +425,7 @@ function gameloop() {
    }
    
    //did we hit the ground?
-   if(box.bottom >= $("#land").offset().top)
-   {
+   if(box.bottom >= $("#land").offset().top){
       playerDead();
       return;
    }

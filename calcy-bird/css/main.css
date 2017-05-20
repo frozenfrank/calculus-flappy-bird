@@ -492,3 +492,15 @@ button.button:hover {
 #scoreboard .history + .history img {
     float: right;
 }
+
+#settings input[type="number"] {
+    width: 60px;
+}
+#settings {
+    z-index: 10;
+    position: absolute;
+    right: 10px;
+    top: 10px;
+    background: rgba(255, 0, 12, 0.45);
+    padding: 5px;
+}

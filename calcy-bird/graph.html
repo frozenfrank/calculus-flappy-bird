@@ -8,43 +8,71 @@
       function drawChart() {
         var data = google.visualization.arrayToDataTable(JSON.parse(localStorage.data || '[]'));
         var chart = new google.visualization.LineChart(document.getElementById('curve_chart'));
+        var inputRange = JSON.parse(localStorage.inputRange),
+          graphDomainSize = JSON.parse(localStorage.graphDomainSize);
+          
         var options = {
           title: 'Historical Position',
           curveType: 'function',
           focusTarget: 'category',
           theme: 'maximized',
+          hAxis: {
+            viewWindow: {},
+          },
+          vAxis: {
+            minValue: inputRange[0],
+            maxValue: inputRange[1],
+            viewWindow: {
+              min: inputRange[0],
+              max: inputRange[1],
+            },
+          },
           legend: { position: 'bottom' }
         };
+        var rows;
         chart.draw(data, options);
         // <<==========>>
         
         console.log('Initializing Event Listener');
         window.addEventListener('storage', function(evt) {
-          if(evt.key !== 'data')
-            return;
+          if(evt.key === 'inputRange'){
+            inputRange = JSON.parse(evt.newValue);
+            options.vAxis = {
+              minValue: inputRange[0],
+              maxValue: inputRange[1],
+              viewWindow: {
+                min: inputRange[0],
+                max: inputRange[1],
+              },
+            };
+            console.log('Updated the inputRange:',inputRange);
+          }else if(evt.key === 'data'){
+            data = google.visualization.arrayToDataTable(JSON.parse(evt.newValue));
+            options.hAxis.minValue = 0;
+            options.hAxis.viewWindow.min = 0;
             
-          data = google.visualization.arrayToDataTable(JSON.parse(evt.newValue));
-          
-          console.log('Replaced graph with new Data');
-          chart.draw(data, options);
-          
-        }, false);
-        window.addEventListener('storage', function (evt){
-          if(evt.key !== 'newData')
-            return; //not the data we care about
-            
-          // console.log('newData has arrived',evt);
-          
-          if(evt.newValue === 'erase'){
-            data.removeRows(0,data.getNumberOfRows());
-            console.log('Removed Data');
-          }else {
-            
-            data.addRows(JSON.parse(evt.newValue));
-            console.log('Added Data');
-            
-            chart.draw(data, options);
+            console.log('Replaced graph with new Data');
+          }else if(evt.key === 'newData'){
+            if(evt.newValue === 'erase'){
+              data.removeRows(0,data.getNumberOfRows());
+              console.log('Removed Data');
+            }else {
+              data.addRows(JSON.parse(evt.newValue));
+              rows = data.getNumberOfRows();
+              if(graphDomainSize === 0){
+                options.hAxis.minValue = 0;
+                options.hAxis.viewWindow.min = 0;
+              }else {
+                options.hAxis.minValue = rows > graphDomainSize ? rows - graphDomainSize : 0;
+                options.hAxis.viewWindow.min = options.hAxis.minValue;
+              }
+              console.log('Added Data');
+            }
+          }else if(evt.key === 'graphDomainSize'){
+            graphDomainSize = JSON.parse(evt.newValue);
+            console.log('Updated graphDomainSize:',graphDomainSize);
           }
+          chart.draw(data, options);
         }, false);
       }
     </script>
