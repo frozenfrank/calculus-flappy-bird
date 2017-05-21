@@ -504,3 +504,10 @@ button.button:hover {
     background: rgba(255, 0, 12, 0.45);
     padding: 5px;
 }
+
+#title {
+   position: absolute;
+   top: 30%;
+   left: 140px;
+   transform: translateY(-50%);
+}

@@ -21,6 +21,7 @@ var states = Object.freeze({
    SplashScreen: 0,
    GameScreen: 1,
    ScoreScreen: 2,
+   TitleScreen: 3,
 });
 var gameModes = Object.freeze({
    value: 0,
@@ -213,15 +214,21 @@ $(document).ready(function() {
       
    if(!owner)
       $("#settings").hide();
+      
+   $('#slider').hide();
    
    //get the highscore
    var savedscore = getCookie("highscore");
    if(savedscore != "")
       highscore = parseInt(savedscore);
    
-   //start with the splash screen
-   showSplash();
+   currentstate = states.TitleScreen;
 });
+
+function leaveTitleScreen(){
+   console.log('Leaving TitleScreen');
+   $('#title').fadeOut('slow',showSplash);
+}
 
 function getCookie(cname){
    var name = cname + "=";
@@ -507,10 +514,11 @@ function screenClick(){
    if(currentstate == states.GameScreen){
       playerJump();
    }
-   else if(currentstate == states.SplashScreen)
-   {
+   else if(currentstate == states.SplashScreen){
       return; //we can't start the game twice
       startGame();
+   }else if(currentstate == states.TitleScreen){
+      leaveTitleScreen();
    }
 }
 
