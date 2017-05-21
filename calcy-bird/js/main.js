@@ -302,15 +302,15 @@ function startGame(mode){
     switch(currentGameMode){
         case gameModes.value: //function
             pipeheight = owner ? 200 : 70;
-            inputRange = [0,flyArea,flyArea/2];
+            inputRange = [0,flyArea,position];
             break;
         case gameModes.derivative:
             pipeheight = 80;
-            position = flyArea / 2;
+            // position = flyArea / 2;
             inputRange = [-300,300,0]
             break;
         case gameModes.integral:
-            position = flyArea / 2;
+            // position = flyArea / 2;
             pipeheight = 100;
             inputRange = [-100,100,0];
             break;
