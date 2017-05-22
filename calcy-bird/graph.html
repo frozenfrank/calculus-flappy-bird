@@ -1,6 +1,7 @@
 <html>
   <head>
     <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script src="js/jquery.min.js"></script>
     <script type="text/javascript">
       google.charts.load('current', {'packages':['corechart']});
       google.charts.setOnLoadCallback(drawChart);
@@ -74,6 +75,19 @@
           }
           chart.draw(data, options);
         }, false);
+        
+        //window resize listener
+        $(window).resize(function() {
+          if(this.resizeTO) clearTimeout(this.resizeTO);
+          this.resizeTO = setTimeout(function() {
+            $(this).trigger('resizeEnd');
+          }, 500);
+        });
+        
+        //redraw graph when window resize is completed  
+        $(window).on('resizeEnd', function() {
+          chart.draw(data, options);
+        });
       }
     </script>
   </head>

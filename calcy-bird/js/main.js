@@ -86,37 +86,6 @@ var Line = function(params,derivatives,integrals){
             return 0; //if there are no values
          return this.pairs[this.pairs.length - 1][returnX ? 0 : 1];
       },
-      draw: function(ctx){
-         ctx.beginPath();
-         
-         ctx.strokeStyle = this.color;
-         
-         function adjustToScreen(value,that){
-            //return the position that it should be on the screen
-            return (value - that.yMin) / that.yMax * ctx.canvas.height;
-         }
-         
-         if(this.pairs[0])
-            ctx.moveTo(this.pairs[0][0],adjustToScreen(this.pairs[0][1],this));
-         
-         this.pairs.every(function(pair){
-            return !ctx.lineTo(pair[0],adjustToScreen(pair[1],this));
-         },this);
-         ctx.stroke();
-         ctx.closePath();
-         
-         return this;
-      },
-      printStatus: function(isChild){
-         var str = this.name+":"+this.getValue();
-         if(this.dx)  str += ', '+ this.dx.printStatus(true);
-         if(this.int) str += ', '+this.int.printStatus(true);
-         
-         if(isChild)
-            return str;
-         console.log(str);
-         return this;
-      },
       clear: function(){
          this.pairs = [];
          if(this.dx)
@@ -134,10 +103,9 @@ var Line = function(params,derivatives,integrals){
    return obj;
 };
 
-$('slider').hide();
 var inputHistory = new Line({},1),
     yHistory = new Line({}),
-    time, inputRange,owner = false,i;
+    time, inputRange,owner = false;
 var Settings = {
    updateRate: {
       val: (function(){
@@ -220,7 +188,7 @@ $(document).ready(function() {
    //get the highscore
    var savedscore = getCookie("highscore");
    if(savedscore != "")
-      highscore = parseInt(savedscore);
+      highscore = parseInt(savedscore,10);
    
    currentstate = states.TitleScreen;
 });
@@ -240,7 +208,6 @@ function getCookie(cname){
    }
    return "";
 }
-
 function setCookie(cname,cvalue,exdays){
    var d = new Date();
    d.setTime(d.getTime()+(exdays*24*60*60*1000));
@@ -377,7 +344,7 @@ function gameloop() {
       case gameModes.derivative:
          inputHistory.setValue(1,-val);
          position -= inputHistory.dx.getValue();
-         position -= heavyWeight(position - flyArea/2) / 2.5;
+         position -= heavyWeight(position - flyArea/2) / 2.5; //move the bird closer to the center at a rate (affected by the divider)
          velocity = 0;
          /*
          if(owner)
