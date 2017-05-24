@@ -270,26 +270,31 @@ function startGame(mode){
         case gameModes.value: //function
             pipeheight = owner ? 200 : 70;
             inputRange = [0,flyArea,position];
+            inputHistory.add(0,flyArea - position);
             break;
         case gameModes.derivative:
             pipeheight = 80;
             // position = flyArea / 2;
-            inputRange = [-300,300,0]
+            inputRange = [-300,300,0];
+            inputHistory.add(0,0);
             break;
         case gameModes.integral:
             // position = flyArea / 2;
             pipeheight = 100;
             inputRange = [-100,100,0];
+            inputHistory.add(0,0);
             break;
          case gameModes.tap:
             pipeheight = 90;
             inputRange = [Settings.sendFlaps.val ? 0 : -50,100,0];
+            inputHistory.add(0,0);
             playerJump(); //jump from the start!
             break;
          default:
             console.error('Faulty gameMode');
             return;
     }
+   yHistory.add(0,flyArea - position); //add the first data point
    slider.attr('min',inputRange[0]).attr('max',inputRange[1]).val(inputRange[2]);
    localStorage.inputRange = JSON.stringify([Math.min(0,inputRange[0] - Math.abs(inputRange[0])/10),Math.max(flyArea,inputRange[1] + Math.abs(inputRange[0])/10)]);
       // ^^^^ always make sure that the flyArea is in the range of the graph
